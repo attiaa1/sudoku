@@ -1,5 +1,6 @@
 import pygame
 import sys
+import random
 
 # constants 
 window_size = 900
@@ -11,6 +12,8 @@ def main() -> None:
     # main game running loop
     running = True
     print("Running...")
+
+    init_grid()
     
     while running:
         for event in pygame.event.get():  # Get events from the queue
@@ -18,7 +21,6 @@ def main() -> None:
                 running = False
                 sys.exit("Shutting down...")
          
-        init_grid()
 
         # Update the display     
         #pygame.display.update()
@@ -39,7 +41,7 @@ def menu() -> str:
     pygame.draw.rect(window, (0, 255, 0), button2)
     pygame.draw.rect(window, (0, 0, 255), button3)
 
-    font = pygame.font.Font(None,24)
+    font = pygame.font.Font(None,48)
     # Draw the text on the buttons
     text1 = font.render('Easy', True, (255,255,255))
     text2 = font.render('Medium', True, (255,255,255))
@@ -74,7 +76,7 @@ def menu() -> str:
                     break
 
             if event.type == pygame.QUIT:
-                sys.exit("Shutting Down")
+                sys.exit("Shutting down...")
 
     pygame.display.update()
     
@@ -82,18 +84,45 @@ def menu() -> str:
     return difficulty
 
 def generate_grid():
-    grid = [
-        [1,2,3,4,5,6,7,8,9],
-        [2,2,3,4,5,6,7,8,9],
-        [3,2,3,4,5,6,7,8,9],
-        [4,2,3,4,5,6,7,8,9],
-        [5,2,3,4,5,6,7,8,9],
-        [6,2,3,4,5,6,7,8,9],
-        [7,2,3,4,5,6,7,8,9],
-        [8,2,3,4,5,6,7,8,9],
-        [9,2,3,4,5,6,7,8,9]
-    ]
-    return grid
+    # grid = [
+    #     [1,2,3,4,5,6,7,8,9],
+    #     [2,2,3,4,5,6,7,8,9],
+    #     [3,2,3,4,5,6,7,8,9],
+    #     [4,2,3,4,5,6,7,8,9],
+    #     [5,2,3,4,5,6,7,8,9],
+    #     [6,2,3,4,5,6,7,8,9],
+    #     [7,2,3,4,5,6,7,8,9],
+    #     [8,2,3,4,5,6,7,8,9],
+    #     [9,2,3,4,5,6,7,8,9]
+    # ]
+    print("Generating grid...")
+
+    # init 0s matrix for populating the grid
+    grid = [[0] * 9 for _ in range(9)]
+    solve_sudoku(grid)
+
+    while True:
+        # Shuffle the rows and columns to get a random solved Sudoku
+        rows = [0, 1, 2, 3, 4, 5, 6, 7, 8]
+        cols = [0, 1, 2, 3, 4, 5, 6, 7, 8]
+        random.shuffle(rows)
+        random.shuffle(cols)
+        shuffled_grid = [[grid[i][j] for j in cols] for i in rows]
+
+        # Set the number of cells to remove
+        num_removed_cells = 40
+
+        for _ in range(num_removed_cells):
+            x, y = random.randint(0, 8), random.randint(0, 8)
+            while shuffled_grid[x][y] == 0:  # Ensure we select a non-empty cell
+                x, y = random.randint(0, 8), random.randint(0, 8)
+            shuffled_grid[x][y] = 0  # Remove the value temporarily
+
+        if is_valid_sudoku(shuffled_grid):
+            break
+    
+    print("Sudoku generated!")
+    return shuffled_grid
 
 def solve_grid() -> None:
     pass
@@ -137,16 +166,30 @@ def draw_cell(row, column, num) -> None:
     text = font.render(str(num), True, (0,0,0))
     window.blit(text, (column * cell_size + cell_size // 4, row * cell_size + cell_size // 4))
 
-def isValidSudoku(grid) -> bool:
+def solve_sudoku(grid) -> None:
+    for i in range(9):
+        for j in range(9):
+            if grid[i][j] == 0:  # Empty cell
+                for num in range(1, 10):
+                    if is_valid_sudoku(grid):  # Check if the modified grid is still valid
+                        grid[i][j] = num
+                        if solve_sudoku(grid):
+                            return True
+                        grid[i][j] = 0  # Backtrack
+                return False
+    return True
+
+def is_valid_sudoku(grid) -> bool:
+    # ! needs to have placeholders as 0s in the grid
     seen = set()
     for i in range(9):
         for j in range(9):
-            number = grid[i][j]  
-            if number != "0":
+            number = grid[i][j]
+            if number != 0:
                 # Create unique identifiers for row, column, and sub-box
                 row = str(number) + "row" + str(i)
                 column = str(number) + "column" + str(j)
-                block = str(number) + "block" + str(i // 3) + "/" + str(j // 3)
+                block = str(number) + "block" + str(i // 3) + str(j // 3)
 
                 # Check if any of these identifiers already exist in the set
                 if row in seen or column in seen or block in seen:
@@ -157,16 +200,19 @@ def isValidSudoku(grid) -> bool:
                 seen.add(column)
                 seen.add(block)
 
-    return True  
+    return True
+ 
     
-
 def init_grid() -> None:
     window.fill((255,255,255))
+    
     # Draw the grid
     for i in range(grid_size):
         for j in range(grid_size):
             rect = pygame.Rect(i*cell_size, j*cell_size, cell_size, cell_size)
             pygame.draw.rect(window, (0, 0, 0), rect, 1)
+    
+    pygame.display.update()
 
     new_grid = generate_grid()
     draw_board(new_grid)

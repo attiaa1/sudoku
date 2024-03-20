@@ -7,13 +7,13 @@ window_size = 900
 grid_size = 9 
 cell_size = window_size // grid_size
 
-def main() -> None:
+def main(difficulty) -> None:
     
     # main game running loop
     running = True
     print("Running...")
 
-    init_grid()
+    generate_grid(difficulty)
     
     while running:
         for event in pygame.event.get():  # Get events from the queue
@@ -83,23 +83,23 @@ def menu() -> str:
     print(f"Chosen difficulty is: {difficulty}")
     return difficulty
 
-def generate_grid():
-    # grid = [
-    #     [1,2,3,4,5,6,7,8,9],
-    #     [2,2,3,4,5,6,7,8,9],
-    #     [3,2,3,4,5,6,7,8,9],
-    #     [4,2,3,4,5,6,7,8,9],
-    #     [5,2,3,4,5,6,7,8,9],
-    #     [6,2,3,4,5,6,7,8,9],
-    #     [7,2,3,4,5,6,7,8,9],
-    #     [8,2,3,4,5,6,7,8,9],
-    #     [9,2,3,4,5,6,7,8,9]
-    # ]
+def generate_grid(difficulty) -> None:
+    window.fill((255,255,255))
+    
+    # Draw the grid
+    for i in range(grid_size):
+        for j in range(grid_size):
+            rect = pygame.Rect(i*cell_size, j*cell_size, cell_size, cell_size)
+            pygame.draw.rect(window, (0, 0, 0), rect, 1)
+    
+    pygame.display.update()
+    
     print("Generating grid...")
 
     # init 0s matrix for populating the grid
     grid = [[0] * 9 for _ in range(9)]
     solve_sudoku(grid)
+
 
     while True:
         # Shuffle the rows and columns to get a random solved Sudoku
@@ -112,6 +112,15 @@ def generate_grid():
         # Set the number of cells to remove
         num_removed_cells = 40
 
+        if difficulty == "easy":
+            num_removed_cells = 40
+
+        if difficulty == "medium":
+            num_removed_cells = 50
+
+        if difficulty == "hard":
+            num_removed_cells = 65
+
         for _ in range(num_removed_cells):
             x, y = random.randint(0, 8), random.randint(0, 8)
             while shuffled_grid[x][y] == 0:  # Ensure we select a non-empty cell
@@ -122,7 +131,7 @@ def generate_grid():
             break
     
     print("Sudoku generated!")
-    return shuffled_grid
+    draw_board(shuffled_grid)
 
 def solve_grid() -> None:
     pass
@@ -203,19 +212,7 @@ def is_valid_sudoku(grid) -> bool:
     return True
  
     
-def init_grid() -> None:
-    window.fill((255,255,255))
-    
-    # Draw the grid
-    for i in range(grid_size):
-        for j in range(grid_size):
-            rect = pygame.Rect(i*cell_size, j*cell_size, cell_size, cell_size)
-            pygame.draw.rect(window, (0, 0, 0), rect, 1)
-    
-    pygame.display.update()
 
-    new_grid = generate_grid()
-    draw_board(new_grid)
 
 if __name__ == "__main__":
     
@@ -231,4 +228,4 @@ if __name__ == "__main__":
     pygame.display.flip()
 
     difficulty = menu()
-    main()
+    main(difficulty)

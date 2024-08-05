@@ -1,4 +1,4 @@
-# Sudoku Game with Pygame
+# Sudoku Game with Pygame [UNFINISHED]
 
 ## Last updated 3/15/2024
 
